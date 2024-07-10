@@ -1,18 +1,4 @@
-const fs = require("fs");
-
-function readStaticFileAsString(fileName) {
-    const file = fs.readFileSync(process.cwd() + "\\static\\" + fileName + ".html")
-    return file.toString();
-};
-
-async function db(db, query){
-    return new Promise(function(resolve,reject){
-        db.all(query, function(err,rows){
-           if(err){return reject(err);}
-           resolve(rows);
-         });
-    });
-}
+const helpers = require("./helperFunctions.js");
 
 module.exports = {
     POST: {
@@ -20,32 +6,35 @@ module.exports = {
             params: {
                 required: { userName: String(), password: String() },
             },
-            function: async function (session, params, context) {
-                const x = await db(context.database, "SELECT * FROM User");
-                return x;
+            function: async function (userName, params, context) {
+                return "Redirect to main page";
+            }.bind(this),
+        },
+        example: {
+            function: async function (userName, params, context) {
+                return "Example response";
             }.bind(this),
         },
         // example: {
         //     params: {
-        //         required: { stringPAram: String() },
-        //         optional: { tempref: String() },
+        //         required: { stringParam: String() },
+        //         optional: { examp: String() },
         //     },
-        //     function: async function (session, params, context) {
-        //         const x = await db(context.database, "SELECT * FROM User");
-        //         return x;
+        //     function: async function (userName, params, context) {
+        //         return "Examp";
         //     }.bind(this),
         // },
     },
     GET: {
         endSession: {
-            function: async function (session, params, context) {
+            function: async function (userName, params, context) {
                 session.authed = null;
                 return rpc.success();
             },
         },
         login: {
-            function: async function (session, params, context) {
-                return readStaticFileAsString("login")
+            function: async function (userName, params, context) {
+                return helpers.readStaticFileAsString("login")
             },
         },
     },

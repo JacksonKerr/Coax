@@ -1,50 +1,69 @@
 module.exports = class requestHandler {
     database = null;
     methods = null;
+    userManager = null;
     ERROR = {
         NO_AUTH: () => "Not authenticated.",
         BAD_CREDENTIALS: () => "Bad username/password combination.",
-        MODEL_NOT_EDITABLE: (modelName) => "Given model '" + modelName + "' is not user editable.",
-        UNKNOWN_METHOD: (methodName) => "Invalid method name '" + methodName + "'.",
+        UNKNOWN_SESSION_TOKEN: () => "Session token unknown or expired.",
         MISSING_PARAM: (param) => "Missing required parameter '" + param + "'.",
         UNKNOWN_PARAMETER: (param) => "Unknown parameter '" + param + "'.",
         BAD_PARAM_TYPE: (param, expected, given) => "Expected type '" + expected
             + "' for parameter '" + param + "' but got '" + given + "'.",
-        UNKNOWN_MODEL_NAME: (modelName) => "Unknown model '" + modelName + "'.",
-        UNKNOWN_PATIENT: (patientID) => "Could not find patient with id: '" + patientID + "'.",
     }
 
-    constructor(methods, database) {
+    constructor(methods, database, userManager) {
         this.database = database;
         this.methods = methods;
+        this.userManager = userManager;
     }
 
-    async callEndpointMethod(endpoint, req, res) { 
-        // this.error(this.ERROR.NO_AUTH);
-        // tempref: TODO session/persistant login
-        const session = req.session; 
-        
-        const relevantMethods = this.methods[req.method]
-        const getMethodNames = Object.keys(relevantMethods);
-        if (!getMethodNames.includes(endpoint)) {
-            res.send(this.error(this.ERROR.UNKNOWN_METHOD, endpoint));
-            return;
-        }
-        
-        const method = relevantMethods[endpoint];
+    async callEndpointMethod(endpoint, req, res) {
+        const returnVal = function (response) {
+            res.send(response);
+            return response; // For testing
+        }.bind(this);
+        const returnFuncResult = async function (userName, params, context) {
+            const response = await method.function(userName, params, context);
+            return returnVal(response);
+        }.bind(this);
+
+        const method = this.methods[req.method][endpoint];
         const params = req.body;
-        if (method.params != null) {
-            // TODO: Don't do param checks for get requests.
-            const paramError = this.checkParams(method, params);
-            if (paramError != null) {
-                res.send(paramError);
-                return;
+
+        const paramError = this.checkParams(method, params);
+        if (paramError != null)
+            return returnVal(paramError);
+
+        let cookieName = "session";
+
+        if (endpoint == "login") {
+            if (req.method == "POST") {
+                let sessionToken = await this.userManager.checkAuth(
+                    params.userName,
+                    params.password
+                );
+                if (!sessionToken)
+                    return returnVal(this.ERROR.BAD_CREDENTIALS());
+                res.cookie(cookieName, sessionToken)
+                req.headers.cookie = cookieName + '=' + sessionToken;
             }
+            if (req.method == "GET")
+                return await returnFuncResult(null, params, this);
         }
 
-        const response = await method.function(session, params, this);
-        res.send(response);
-        return response; // For testing
+        if (req.headers.cookie === undefined)
+            return returnVal(this.ERROR.NO_AUTH());
+
+        let sessionToken = req.headers.cookie
+            .split('; ')
+            .find(c => c.includes(cookieName))
+            .replace(cookieName + '=', '');
+        let userName = this.userManager.getUserFromToken(sessionToken);
+        if (userName == null)
+            return returnVal(this.ERROR.UNKNOWN_SESSION_TOKEN()); 
+
+        return await returnFuncResult(userName, params, this);
     }
 
     /**
@@ -60,17 +79,16 @@ module.exports = class requestHandler {
 
         for (const required of requiredNames)
             if (!Object.keys(params).includes(required))
-                return this.error(this.ERROR.MISSING_PARAM, required);
+                return this.ERROR.MISSING_PARAM(required);
 
         for (const paramName of Object.keys(params)) {
             const givenType = typeof (params[paramName])
 
             if (allParamNames.includes(paramName)) {
                 const expectedType = typeof (allParams[paramName]);
-
                 if (expectedType != givenType)
-                    return this.error(this.ERROR.BAD_PARAM_TYPE, paramName, expectedType, givenType)
-            } else return this.error(this.ERROR.UNKNOWN_PARAMETER(paramName));
+                    return this.ERROR.BAD_PARAM_TYPE(paramName, expectedType, givenType);
+            } else return this.ERROR.UNKNOWN_PARAMETER(paramName);
         }
         return null;
     }

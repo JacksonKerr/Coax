@@ -10,16 +10,15 @@ let config = JSON.parse(fs.readFileSync(configPath));
 
 async function setupDB() {
   const db = new sqlite3.Database(':memory:');
-  const setupStatments = require(process.cwd() + "\\dbSetupStatments.js");
+  const setupStatments = require("./dbSetupStatments.js");
   db.serialize(() => setupStatments.forEach(s => db.run(s)));
   return db;
 }
 
-async function setupEndpoints(app, port, database) {
+async function setupEndpoints(app, port, database, userManager) {
   const requestHandler = require("./requestHandler.js");
-
   const methods = require(process.cwd() + "\\server\\methods.js");
-  const rpc = new requestHandler(methods, database);
+  const rqh = new requestHandler(methods, database, userManager);
 
   const endpointTypes = Object.keys(methods);
   for (const endpointType of endpointTypes)
@@ -28,14 +27,20 @@ async function setupEndpoints(app, port, database) {
         "/" + endpointName,
         function (req, res) {
           this.callEndpointMethod(endpointName, req, res);
-        }.bind(rpc)
+        }.bind(rqh)
       );
   app.listen(port);
 }
 
 async function setup() {
   app.use(bodyParser.urlencoded({ extended: true }));
-  await setupEndpoints(app, config.port, await setupDB());
+
+  const db = await setupDB();
+
+  const userManager = require("./userManager.js");
+  const um = new userManager(db);
+
+  await setupEndpoints(app, config.port, db, um);
   console.log("Server started on port: " + config.port);
 }
 setup();
