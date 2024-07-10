@@ -1,8 +1,5 @@
 const helpers = require("./helperFunctions.js");
-
-function redirect(endpoint) {
-    return "<script>window.location.href = '/" + endpoint + "'</script>";
-}
+const Handlebars = require('handlebars');
 
 module.exports = {
     POST: {
@@ -11,21 +8,34 @@ module.exports = {
                 required: { userName: String(), password: String() },
             },
             function: async function (userName, params, context) {
-                return redirect("home");
+                return helpers.getJsRedirect("home");
+            }.bind(this),
+        },
+        sendMessage: {
+            params: {
+                required: { toUser: String(), message: String() },
+            },
+            function: async function (userName, params, context) {
+                helpers.db(
+                    context.database, 
+                    "INSERT INTO Message (Msg, fromUser, toUser)"
+                    + "VALUES ('" + params.message + "', '" + userName + "', '" + params.toUser + "')"
+                )
+                return helpers.getJsRedirect("chat?userName=" + params.toUser);
             }.bind(this),
         },
     },
     GET: {
         home: {
             function: async function (userName, params, context) {
-                return helpers.readStaticFileAsString("home");
+                return helpers.readStaticFileAsString("home.html");
             },
         },
         login: {
             function: async function (userName, params, context) {
                 if (userName)
-                    return redirect("home");
-                return helpers.readStaticFileAsString("login");
+                    return helpers.getJsRedirect("home");
+                return helpers.readStaticFileAsString("login.html");
             },
         },
         users: {
@@ -37,13 +47,26 @@ module.exports = {
                 let response = "";
                 for (let user of users)
                     response += `
-                        <a href='/messages?userName=`+ user.UserName + `' hx-swap='outerHTML'>
+                        <a href='/chat?userName=`+ user.UserName + `' hx-swap='outerHTML'>
                             ` + user.UserName + `
                         </a>
                         <br/>
                     `;
                 return response;
             },
+        },
+        chat: {
+            params: {
+                required: { userName: String() },
+            },
+            function: async function (userName, params, context) {
+                // Select all messages between users
+                let template = Handlebars.compile(
+                    helpers.readStaticFileAsString("chat.handlebars")
+                );
+                let response = template({toUser: params.userName});
+                return response;
+            }.bind(this),
         },
         messages: {
             params: {
@@ -53,13 +76,22 @@ module.exports = {
                 // Select all messages between users
                 const messages = await helpers.db(
                     context.database,
-                    "SELECT * FROM Message WHERE '" + userName + "' IN (fromUser, toUser)"
-                    + "ORDER BY [TimeStamp] DESC"
+                    `SELECT * FROM Message 
+                    WHERE (fromUser = '` + userName + `' AND toUser = '` + params.userName + `')
+                    OR (fromUser = '` + params.userName + `' AND toUser = '` + userName + `')
+                    ORDER BY [TimeStamp] ASC`
                 );
-                let response = "<h4>Messages:</h4><br/>";
-                for (let message of messages) {
-                    response += "<p>" + message.Msg + "</p>"; 
-                }
+                helpers.get
+                let template = Handlebars.compile(
+                    `{{#messages}}
+                    <div class="container">
+                            <span class="time-left">{{TimeStamp}}</span>
+                            {{fromUser}}: {{Msg}}
+                    </div>
+                    {{/messages}}`
+                );
+                
+                let response = template({messages, toUser: params.userName});
                 return response;
             }.bind(this),
         },

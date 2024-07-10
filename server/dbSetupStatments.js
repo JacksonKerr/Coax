@@ -15,8 +15,9 @@ module.exports = [
     );`,
     `INSERT INTO User (UserName, Password) VALUES ('Jackson', 'password');`,
     `INSERT INTO User (UserName, Password) VALUES ('Justiva', 'password');`,
-    `INSERT INTO Message (Msg, fromUser, toUser) 
-    VALUES ('Test Message', 'Jackson', 'Justiva');`,
+    `INSERT INTO Message (Msg, fromUser, toUser) VALUES ('Test Message1', 'Jackson', 'Justiva');`,
+    `INSERT INTO Message (Msg, fromUser, toUser) VALUES ('Test Message2', 'Justiva', 'Jackson');`,
+    `INSERT INTO Message (Msg, fromUser, toUser) VALUES ('Test Message3', 'Jackson', 'Justiva');`,
     `INSERT INTO User (UserName, Password) VALUES ('Chris', 'password');`,
 ];
 

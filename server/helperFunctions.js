@@ -10,7 +10,10 @@ module.exports = {
         });
     },
     readStaticFileAsString(fileName) {
-        const file = fs.readFileSync(process.cwd() + "\\static\\" + fileName + ".html")
+        const file = fs.readFileSync(process.cwd() + "\\static\\" + fileName)
         return file.toString();
     },
+    getJsRedirect(endpoint) {
+        return "<script>window.location.href = '/" + endpoint + "'</script>";
+    }
 }

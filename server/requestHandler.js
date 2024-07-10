@@ -1,4 +1,9 @@
+const helpers = require("./helperFunctions.js");
+
 module.exports = class requestHandler {
+    LOGIN_ENDPOINT = "login";
+    SESSION_COOKIE = "session";
+
     database = null;
     methods = null;
     userManager = null;
@@ -19,14 +24,13 @@ module.exports = class requestHandler {
     }
 
     async callEndpointMethod(endpoint, req, res) {
-        const returnVal = function (response) {
+        const returnVal = function (response, isAuthFail) {
+            if (isAuthFail)
+                response = helpers.getJsRedirect("login")
             res.send(response);
             return response; // For testing
         }.bind(this);
-        const returnErr = function (response) {
-            res.redirect("/login");
-        }.bind(this);
-        const returnFuncResult = async function (userName, params, context) {
+        const returnFuncResult = async function (method, userName, params, context) {
             const response = await method.function(userName, params, context);
             return returnVal(response);
         }.bind(this);
@@ -38,28 +42,35 @@ module.exports = class requestHandler {
         if (paramError != null)
             return returnVal(paramError);
 
-        let cookieName = "session";
+        let sessionToken;
 
-        if (endpoint == "login" && req.method == "POST") {
-            let newSession = await this.userManager.newSession(
-                params.userName,
-                params.password
-            );
-            if (!newSession)
-                return returnErr(this.ERROR.BAD_CREDENTIALS());
-            res.cookie(cookieName, newSession)
-            req.headers.cookie = cookieName + '=' + newSession;
+        if (endpoint == LOGIN_ENDPOINT) {
+            if (req.method == "POST") {
+                sessionToken = await this.userManager.newSession(
+                    params.userName,
+                    params.password
+                );
+                if (!sessionToken) 
+                    return returnVal(this.ERROR.BAD_CREDENTIALS(), true);
+                res.cookie(SESSION_COOKIE, sessionToken)
+                req.headers.cookie = SESSION_COOKIE + '=' + sessionToken;
+            }
+            if (req.method == "GET") {
+                this.userManager.killSessionIfExists(sessionToken);
+                return await returnFuncResult(this.methods.GET.login, '', {}, this);
+            }
         }
 
-        // if (req.headers.cookie === undefined)
-        //     return returnErr(this.ERROR.NO_AUTH());
+        if (sessionToken == null)
+            sessionToken = (req.headers.cookie)?.split('; ')
+                .find(c => c.includes(SESSION_COOKIE))
+                .replace(SESSION_COOKIE + '=', '');
 
-        let sessionToken = req.headers.cookie?.split('; ')
-            .find(c => c.includes(cookieName))
-            .replace(cookieName + '=', '');
         let userName = this.userManager.getUserFromToken(sessionToken);
-        if (userName != null || (endpoint == "login" && req.method == "GET"))
-            return await returnFuncResult(userName, params, this);
+
+        if (userName != null) {
+            return await returnFuncResult(method, userName, params, this);
+        }
         return returnErr(this.ERROR.UNKNOWN_SESSION_TOKEN());
     }
 
@@ -91,9 +102,20 @@ module.exports = class requestHandler {
     }
 
     getParamsFromRequest(req) {
-        const params = {...req.body, ...req.query};
+        function escape(s) {
+            let lookup = {
+                '&': "&amp;",
+                '"': "&quot;",
+                '\'': "&apos;",
+                '<': "&lt;",
+                '>': "&gt;"
+            };
+            return s.replace(/[&"'<>]/g, c => lookup[c]);
+        }
+
+        const params = { ...req.body, ...req.query };
         for (let param of Object.keys(params))
-            params[param] = params[param].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            params[param] = escape(params[param]);
         return params
     }
 }

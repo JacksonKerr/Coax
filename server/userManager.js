@@ -27,4 +27,8 @@ module.exports = class userManager {
         // TODO: Session expiration
         return this.authedUsers[token]?.userName;
     }
+
+    killSessionIfExists(token) {
+        delete this.authedUsers[token];
+    }
 }

@@ -11,10 +11,7 @@
 <body>
     <main>
         <script src="https://unpkg.com/htmx.org@2.0.0"></script>
-        <!-- have a button POST a click via AJAX -->
-        <button hx-post="/clicked" hx-swap="main">
-            Click Me
-        </button>
+        <a href="login">Log Out</a>
         <div hx-trigger="load" hx-get="/users"></div>
     </main>
 </body>

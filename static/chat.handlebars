@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Coax - {{toUser}}</title>
+</head>
+<style>
+    .container {
+        border: 2px solid #dedede;
+        background-color: #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px 0;
+    }
+
+    .time-left {
+        float: left;
+        color: #999;
+    }
+</style>
+
+<body>
+    <main>
+        <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+
+        <button onClick="window.location='/home'">Back</button>
+        <button onClick="window.location.reload();">Refresh Page</button>
+        
+        <div class="getChat" hx-get="/messages" hx-trigger="click, load" hx-swap="inner"
+            hx-vals='{"userName": "{{toUser}}"}'>
+            Loading...
+        </div>
+        <script>
+            let toClick = document.querySelector("[class='getChat']");
+            const click = () => toClick.click();
+            setInterval(click , 3000);
+        </script>
+
+        <form hx-post="/sendMessage" hx-swap="main" hx-vals='{"toUser": "{{toUser}}"}'>
+            <input type="text" name="message" value="">
+            <input type="submit" value="Send">
+        </form>
+    </main>
+</body>
+
+</html>
