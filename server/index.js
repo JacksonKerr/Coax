@@ -38,7 +38,7 @@ async function setup() {
   const db = await setupDB();
 
   const userManager = require("./userManager.js");
-  const um = new userManager(db);
+  const um = new userManager(db, config.numBytesInSessionToken);
 
   await setupEndpoints(app, config.port, db, um);
   console.log("Server started on port: " + config.port);
