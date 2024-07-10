@@ -8,7 +8,7 @@ module.exports = class userManager {
         this.database = database;
     }
 
-    async checkAuth(userName, password) {
+    async newSession(userName, password) {
         let userRows = await helpers.db(
             this.database,
             "SELECT * FROM User"

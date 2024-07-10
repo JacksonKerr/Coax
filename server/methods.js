@@ -1,5 +1,9 @@
 const helpers = require("./helperFunctions.js");
 
+function redirect(endpoint) {
+    return "<script>window.location.href = '/" + endpoint + "'</script>";
+}
+
 module.exports = {
     POST: {
         login: {
@@ -7,7 +11,7 @@ module.exports = {
                 required: { userName: String(), password: String() },
             },
             function: async function (userName, params, context) {
-                return "Redirect to main page";
+                return redirect("chat");
             }.bind(this),
         },
         example: {
@@ -26,15 +30,26 @@ module.exports = {
         // },
     },
     GET: {
-        endSession: {
+        chat: {
             function: async function (userName, params, context) {
-                session.authed = null;
-                return rpc.success();
+                return helpers.readStaticFileAsString("chat");
             },
         },
         login: {
             function: async function (userName, params, context) {
-                return helpers.readStaticFileAsString("login")
+                if (userName) 
+                    return redirect("chat");
+                return helpers.readStaticFileAsString("login");
+            },
+        },
+        users: {
+            function: async function (userName, params, context) {
+                let users = await helpers.db(
+                    context.database,
+                    "SELECT UserName FROM User"
+                );
+                users = users.map(u => u.UserName);
+                return users;
             },
         },
     },

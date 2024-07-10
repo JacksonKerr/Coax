@@ -37,33 +37,27 @@ module.exports = class requestHandler {
 
         let cookieName = "session";
 
-        if (endpoint == "login") {
-            if (req.method == "POST") {
-                let sessionToken = await this.userManager.checkAuth(
-                    params.userName,
-                    params.password
-                );
-                if (!sessionToken)
-                    return returnVal(this.ERROR.BAD_CREDENTIALS());
-                res.cookie(cookieName, sessionToken)
-                req.headers.cookie = cookieName + '=' + sessionToken;
-            }
-            if (req.method == "GET")
-                return await returnFuncResult(null, params, this);
+        if (endpoint == "login" && req.method == "POST") {
+            let newSession = await this.userManager.newSession(
+                params.userName,
+                params.password
+            );
+            if (!newSession)
+                return returnVal(this.ERROR.BAD_CREDENTIALS());
+            res.cookie(cookieName, newSession)
+            req.headers.cookie = cookieName + '=' + newSession;
         }
 
         if (req.headers.cookie === undefined)
             return returnVal(this.ERROR.NO_AUTH());
 
-        let sessionToken = req.headers.cookie
-            .split('; ')
+        let sessionToken = req.headers.cookie?.split('; ')
             .find(c => c.includes(cookieName))
             .replace(cookieName + '=', '');
         let userName = this.userManager.getUserFromToken(sessionToken);
-        if (userName == null)
-            return returnVal(this.ERROR.UNKNOWN_SESSION_TOKEN()); 
-
-        return await returnFuncResult(userName, params, this);
+        if (userName != null || (endpoint == "login" && req.method == "GET"))
+            return await returnFuncResult(userName, params, this);
+        return returnVal(this.ERROR.UNKNOWN_SESSION_TOKEN());
     }
 
     /**
