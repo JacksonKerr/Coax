@@ -6,15 +6,10 @@ const app = require("express")();
 AREA_PATH = process.cwd() + "\\server\\"
 
 // Read config
-let config = null;
-try {
-  config = JSON.parse(fs.readFileSync(__dirname + '\\config.json'));
-} catch {
-  config = JSON.parse(fs.readFileSync(__dirname + '\\config.default.json'));
-}
-
-
-const userManager = null;
+const configPath = process.cwd() + '\\config.json';
+if (!fs.existsSync(configPath))
+  fs.copyFileSync(__dirname + '\\config.default.json', configPath);
+let config = JSON.parse(fs.readFileSync(configPath));
 
 async function main() {
   app.use(bodyParser.urlencoded({ extended: true }));
