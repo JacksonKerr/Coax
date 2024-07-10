@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "node server",
-    "test": "powershell -ExecutionPolicy Bypass -File server_test/testAll.ps1"
+    "test": "mocha"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.0.13",

@@ -86,6 +86,7 @@ module.exports = {
                     `{{#messages}}
                     <div class="container">
                             <span class="time-left">{{TimeStamp}}</span>
+                            <br/>
                             {{fromUser}}: {{Msg}}
                     </div>
                     {{/messages}}`

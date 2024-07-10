@@ -1,9 +1,9 @@
 const helpers = require("./helperFunctions.js");
 
-module.exports = class requestHandler {
-    LOGIN_ENDPOINT = "login";
-    SESSION_COOKIE = "session";
+const LOGIN_ENDPOINT = "login";
+const SESSION_COOKIE = "session";
 
+module.exports = class requestHandler {
     database = null;
     methods = null;
     userManager = null;
@@ -67,11 +67,9 @@ module.exports = class requestHandler {
                 .replace(SESSION_COOKIE + '=', '');
 
         let userName = this.userManager.getUserFromToken(sessionToken);
-
-        if (userName != null) {
+        if (userName != null) 
             return await returnFuncResult(method, userName, params, this);
-        }
-        return returnErr(this.ERROR.UNKNOWN_SESSION_TOKEN());
+        return returnVal(this.ERROR.UNKNOWN_SESSION_TOKEN(), true);
     }
 
     /**

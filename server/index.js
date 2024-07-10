@@ -42,5 +42,8 @@ async function setup() {
 
   await setupEndpoints(app, config.port, db, um);
   console.log("Server started on port: " + config.port);
+  
+  return {app, db, um};
 }
-setup();
+
+module.exports = setup();;
