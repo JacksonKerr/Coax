@@ -5,28 +5,28 @@ const app = require("express")();
 
 const configPath = process.cwd() + '\\config.json';
 if (!fs.existsSync(configPath))
-  fs.copyFileSync(__dirname + '\\config.default.json', configPath);
+  fs.copyFileSync(process.cwd() + '\\config.default.json', configPath);
 let config = JSON.parse(fs.readFileSync(configPath));
 
 async function setupDB() {
   const db = new sqlite3.Database(':memory:');
-  const setupStatments = require("./dbSetupStatments.js");
+  const setupStatments = require("./server/dbSetupStatments.js");
   db.serialize(() => setupStatments.forEach(s => db.run(s)));
   return db;
 }
 
 async function setupEndpoints(app, port, database, userManager) {
-  const requestHandler = require("./requestHandler.js");
-  const methods = require(process.cwd() + "\\server\\methods.js");
+  const requestHandler = require("./server/requestHandler.js");
+  const methods = require(process.cwd() + "\\server\\endpoints.js");
   const rqh = new requestHandler(methods, database, userManager);
 
   const endpointTypes = Object.keys(methods);
   for (const endpointType of endpointTypes)
-    for (const endpointName of Object.keys(methods[endpointType]))
+    for (const endpointPath of Object.keys(methods[endpointType]))
       await app[endpointType.toLowerCase()](
-        "/" + endpointName,
+        "/" + endpointPath,
         function (req, res) {
-          this.callEndpointMethod(endpointName, req, res);
+          this.callEndpoint(endpointPath, req, res);
         }.bind(rqh)
       );
   app.listen(port);
@@ -37,7 +37,7 @@ async function setup() {
 
   const db = await setupDB();
 
-  const userManager = require("./userManager.js");
+  const userManager = require("./server/userManager.js");
   const um = new userManager(db, config.numBytesInSessionToken);
 
   await setupEndpoints(app, config.port, db, um);

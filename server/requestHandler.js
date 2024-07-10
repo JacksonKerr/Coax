@@ -17,13 +17,13 @@ module.exports = class requestHandler {
             + "' for parameter '" + param + "' but got '" + given + "'.",
     }
 
-    constructor(methods, database, userManager) {
+    constructor(endpoints, database, userManager) {
         this.database = database;
-        this.methods = methods;
+        this.endpoints = endpoints;
         this.userManager = userManager;
     }
 
-    async callEndpointMethod(endpoint, req, res) {
+    async callEndpoint(endpointPath, req, res) {
         const returnVal = function (response, isAuthFail) {
             if (isAuthFail)
                 response = helpers.getJsRedirect("login")
@@ -35,7 +35,7 @@ module.exports = class requestHandler {
             return returnVal(response);
         }.bind(this);
 
-        const method = this.methods[req.method][endpoint];
+        const method = this.endpoints[req.method][endpointPath];
         const params = this.getParamsFromRequest(req);
 
         const paramError = this.checkParams(method, params);
@@ -44,7 +44,7 @@ module.exports = class requestHandler {
 
         let sessionToken;
 
-        if (endpoint == LOGIN_ENDPOINT) {
+        if (endpointPath == LOGIN_ENDPOINT) {
             if (req.method == "POST") {
                 sessionToken = await this.userManager.newSession(
                     params.userName,
@@ -57,7 +57,7 @@ module.exports = class requestHandler {
             }
             if (req.method == "GET") {
                 this.userManager.killSessionIfExists(sessionToken);
-                return await returnFuncResult(this.methods.GET.login, '', {}, this);
+                return await returnFuncResult(this.endpoints.GET.login, '', {}, this);
             }
         }
 
