@@ -1,7 +1,6 @@
 module.exports = class requestHandler {
     database = null;
     methods = null;
-    userManager = null;
     ERROR = {
         NO_AUTH: () => "Not authenticated.",
         BAD_CREDENTIALS: () => "Bad username/password combination.",
@@ -15,9 +14,8 @@ module.exports = class requestHandler {
         UNKNOWN_PATIENT: (patientID) => "Could not find patient with id: '" + patientID + "'.",
     }
 
-    constructor(methods, database, userManager) {
+    constructor(methods, database) {
         this.database = database;
-        this.userManager = userManager;
         this.methods = methods;
     }
 
