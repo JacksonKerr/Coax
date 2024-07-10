@@ -1,4 +1,4 @@
-module.exports = () => ([
+module.exports = [
     // TODO: Password hashing/etc
     `CREATE TABLE User (
         UserName VARCHAR(25) UNIQUE PRIMARY KEY,
@@ -21,5 +21,5 @@ module.exports = () => ([
         FOREIGN KEY(ChatGroupID) REFERENCES ChatGroup(ID)
     );`,
     `INSERT INTO User (UserName, Password) VALUES ('JacksonKerr', 'JacksonKerrPassword');`
-]);
+];
 

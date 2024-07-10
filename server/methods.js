@@ -14,7 +14,7 @@ async function db(db, query){
     });
 }
 
-module.exports = (database) => ({
+module.exports = {
     POST: {
         login: {
             params: {
@@ -49,4 +49,4 @@ module.exports = (database) => ({
             },
         },
     },
-});
+};
