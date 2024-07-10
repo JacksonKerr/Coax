@@ -4,7 +4,7 @@ module.exports = [
         UserName VARCHAR(25) UNIQUE PRIMARY KEY,
         [Password] VARCHAR(25)
     );`,
-    `CREATE TABLE ChatMessage (
+    `CREATE TABLE Message (
         ID VARCHAR(25) UNIQUE PRIMARY KEY,
         Msg VARCHAR(255),
         fromUser VARCHAR(25),
@@ -15,5 +15,8 @@ module.exports = [
     );`,
     `INSERT INTO User (UserName, Password) VALUES ('Jackson', 'password');`,
     `INSERT INTO User (UserName, Password) VALUES ('Justiva', 'password');`,
+    `INSERT INTO Message (Msg, fromUser, toUser) 
+    VALUES ('Test Message', 'Jackson', 'Justiva');`,
+    `INSERT INTO User (UserName, Password) VALUES ('Chris', 'password');`,
 ];
 

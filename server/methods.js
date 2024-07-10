@@ -11,29 +11,20 @@ module.exports = {
                 required: { userName: String(), password: String() },
             },
             function: async function (userName, params, context) {
-                return redirect("chat");
+                return redirect("home");
             }.bind(this),
         },
-        // example: {
-        //     params: {
-        //         required: { stringParam: String() },
-        //         optional: { examp: String() },
-        //     },
-        //     function: async function (userName, params, context) {
-        //         return "Examp";
-        //     }.bind(this),
-        // },
     },
     GET: {
-        chat: {
+        home: {
             function: async function (userName, params, context) {
-                return helpers.readStaticFileAsString("chat");
+                return helpers.readStaticFileAsString("home");
             },
         },
         login: {
             function: async function (userName, params, context) {
                 if (userName)
-                    return redirect("chat");
+                    return redirect("home");
                 return helpers.readStaticFileAsString("login");
             },
         },
@@ -46,7 +37,7 @@ module.exports = {
                 let response = "";
                 for (let user of users)
                     response += `
-                        <a href='/dm?userName=`+ user.UserName + `' hx-swap='outerHTML'>
+                        <a href='/messages?userName=`+ user.UserName + `' hx-swap='outerHTML'>
                             ` + user.UserName + `
                         </a>
                         <br/>
@@ -54,13 +45,22 @@ module.exports = {
                 return response;
             },
         },
-        dm: {
+        messages: {
             params: {
                 required: { userName: String() },
             },
             function: async function (userName, params, context) {
                 // Select all messages between users
-                return "Example response";
+                const messages = await helpers.db(
+                    context.database,
+                    "SELECT * FROM Message WHERE '" + userName + "' IN (fromUser, toUser)"
+                    + "ORDER BY [TimeStamp] DESC"
+                );
+                let response = "<h4>Messages:</h4><br/>";
+                for (let message of messages) {
+                    response += "<p>" + message.Msg + "</p>"; 
+                }
+                return response;
             }.bind(this),
         },
     },
