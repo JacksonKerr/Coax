@@ -1,0 +1,16 @@
+{
+  "name": "coax",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "node server",
+    "test": "powershell -ExecutionPolicy Bypass -File server_test/testAll.ps1"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.0.13",
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "mocha": "^10.6.0",
+    "sqlite3": "^5.1.7"
+  }
+}

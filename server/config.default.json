@@ -1,0 +1,6 @@
+{
+    "enableAuth" : true,
+    "sessionSecret" : "This should be a randomly generated and hard to guess string",
+    "port": 8081,
+    "verbose": false
+}

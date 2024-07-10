@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Coax - Login</title>
+</head>
+
+<body>
+    <main>
+        <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+        <!-- have a button POST a click via AJAX -->
+        <button hx-post="/login" hx-swap="outerHTML">
+            Click Me
+        </button>
+
+
+
+
+        <form hx-post="/login" hx-target="this" hx-swap="outerHTML">
+            <label>Login</label>
+            <input type="text" name="userName" value="UserName">
+            <input type="text" name="password" value="Password">
+            <input type="submit" value="Submit">
+        </form>
+
+    </main>
+</body>
+
+</html>

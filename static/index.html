@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Coax</title>
+</head>
+
+<body>
+    <main>
+        <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+        <!-- have a button POST a click via AJAX -->
+        <button hx-post="/clicked" hx-swap="outerHTML">
+            Click Me
+        </button>
+    </main>
+</body>
+
+</html>
