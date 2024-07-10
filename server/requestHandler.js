@@ -23,13 +23,16 @@ module.exports = class requestHandler {
             res.send(response);
             return response; // For testing
         }.bind(this);
+        const returnErr = function (response) {
+            res.redirect("/login");
+        }.bind(this);
         const returnFuncResult = async function (userName, params, context) {
             const response = await method.function(userName, params, context);
             return returnVal(response);
         }.bind(this);
 
         const method = this.methods[req.method][endpoint];
-        const params = req.body;
+        const params = this.getParamsFromRequest(req);
 
         const paramError = this.checkParams(method, params);
         if (paramError != null)
@@ -43,13 +46,13 @@ module.exports = class requestHandler {
                 params.password
             );
             if (!newSession)
-                return returnVal(this.ERROR.BAD_CREDENTIALS());
+                return returnErr(this.ERROR.BAD_CREDENTIALS());
             res.cookie(cookieName, newSession)
             req.headers.cookie = cookieName + '=' + newSession;
         }
 
-        if (req.headers.cookie === undefined)
-            return returnVal(this.ERROR.NO_AUTH());
+        // if (req.headers.cookie === undefined)
+        //     return returnErr(this.ERROR.NO_AUTH());
 
         let sessionToken = req.headers.cookie?.split('; ')
             .find(c => c.includes(cookieName))
@@ -57,7 +60,7 @@ module.exports = class requestHandler {
         let userName = this.userManager.getUserFromToken(sessionToken);
         if (userName != null || (endpoint == "login" && req.method == "GET"))
             return await returnFuncResult(userName, params, this);
-        return returnVal(this.ERROR.UNKNOWN_SESSION_TOKEN());
+        return returnErr(this.ERROR.UNKNOWN_SESSION_TOKEN());
     }
 
     /**
@@ -85,5 +88,12 @@ module.exports = class requestHandler {
             } else return this.ERROR.UNKNOWN_PARAMETER(paramName);
         }
         return null;
+    }
+
+    getParamsFromRequest(req) {
+        const params = {...req.body, ...req.query};
+        for (let param of Object.keys(params))
+            params[param] = params[param].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return params
     }
 }

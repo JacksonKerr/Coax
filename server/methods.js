@@ -14,11 +14,6 @@ module.exports = {
                 return redirect("chat");
             }.bind(this),
         },
-        example: {
-            function: async function (userName, params, context) {
-                return "Example response";
-            }.bind(this),
-        },
         // example: {
         //     params: {
         //         required: { stringParam: String() },
@@ -37,7 +32,7 @@ module.exports = {
         },
         login: {
             function: async function (userName, params, context) {
-                if (userName) 
+                if (userName)
                     return redirect("chat");
                 return helpers.readStaticFileAsString("login");
             },
@@ -46,11 +41,27 @@ module.exports = {
             function: async function (userName, params, context) {
                 let users = await helpers.db(
                     context.database,
-                    "SELECT UserName FROM User"
+                    "SELECT UserName FROM User WHERE UserName != '" + userName + "'"
                 );
-                users = users.map(u => u.UserName);
-                return users;
+                let response = "";
+                for (let user of users)
+                    response += `
+                        <a href='/dm?userName=`+ user.UserName + `' hx-swap='outerHTML'>
+                            ` + user.UserName + `
+                        </a>
+                        <br/>
+                    `;
+                return response;
             },
+        },
+        dm: {
+            params: {
+                required: { userName: String() },
+            },
+            function: async function (userName, params, context) {
+                // Select all messages between users
+                return "Example response";
+            }.bind(this),
         },
     },
 };

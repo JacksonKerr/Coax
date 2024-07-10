@@ -4,22 +4,16 @@ module.exports = [
         UserName VARCHAR(25) UNIQUE PRIMARY KEY,
         [Password] VARCHAR(25)
     );`,
-    `CREATE TABLE ChatGroup (
-        ID VARCHAR(25) UNIQUE PRIMARY KEY
-    );`,
-    `CREATE TABLE ChatUser (
-        UserID INT,
-        ChatGroupID INT,
-        FOREIGN KEY(ChatGroupID) REFERENCES ChatGroup(ID),
-        FOREIGN KEY(UserID) REFERENCES User(ID)
-    );`,
     `CREATE TABLE ChatMessage (
         ID VARCHAR(25) UNIQUE PRIMARY KEY,
         Msg VARCHAR(255),
-        ChatGroupID INT,
+        fromUser VARCHAR(25),
+        toUser VARCHAR(25),
         [TimeStamp] TimeStamp DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(ChatGroupID) REFERENCES ChatGroup(ID)
+        FOREIGN KEY(fromUser) REFERENCES User(userName),
+        FOREIGN KEY(toUser) REFERENCES User(userName)
     );`,
-    `INSERT INTO User (UserName, Password) VALUES ('JacksonKerr', 'JacksonKerrPassword');`
+    `INSERT INTO User (UserName, Password) VALUES ('Jackson', 'password');`,
+    `INSERT INTO User (UserName, Password) VALUES ('Justiva', 'password');`,
 ];
 
