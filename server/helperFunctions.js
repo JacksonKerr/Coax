@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 module.exports = {
-    db(db, query){
+    async db(db, query){
         return new Promise(function(resolve,reject){
             db.all(query, function(err,rows){
                if(err){return reject(err);}

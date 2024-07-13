@@ -15,10 +15,10 @@ async function setupDB() {
   return db;
 }
 
-async function setupEndpoints(app, port, database, userManager) {
+async function setupEndpoints(app, database, userManager) {
   const requestHandler = require("./server/requestHandler.js");
   const methods = require(process.cwd() + "\\server\\endpoints.js");
-  const rqh = new requestHandler(methods, database, userManager);
+  const rqh = new requestHandler(methods, database, userManager, config.publicEndpoints);
 
   const endpointTypes = Object.keys(methods);
   for (const endpointType of endpointTypes)
@@ -29,7 +29,8 @@ async function setupEndpoints(app, port, database, userManager) {
           this.callEndpoint(endpointPath, req, res);
         }.bind(rqh)
       );
-  app.listen(port);
+  app.listen(config.port);
+  console.log("Endpoints listening on port: " + config.port);
 }
 
 async function setup() {
@@ -40,10 +41,10 @@ async function setup() {
   const userManager = require("./server/userManager.js");
   const um = new userManager(db, config.numBytesInSessionToken);
 
-  await setupEndpoints(app, config.port, db, um);
-  console.log("Server started on port: " + config.port);
+  await setupEndpoints(app, db, um);
   
   return {app, db, um};
 }
 
-module.exports = setup();;
+module.exports = setup();
+

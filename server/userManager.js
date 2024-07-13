@@ -30,7 +30,12 @@ module.exports = class userManager {
         return this.authedUsers[token]?.userName;
     }
 
-    killSessionIfExists(token) {
-        delete this.authedUsers[token];
+    killUserSessionIfExists(userName) {
+        for (const token of Object.kets(this.authedUsers)) {
+            if (this.authedUsers[token].userName == userName) {
+                delete this.authedUsers[token];
+                return;
+            }
+        }
     }
 }

@@ -18,7 +18,9 @@ async function testEndpoints(db) {
                     );
                 else describe(
                     testName,
-                    () => functionTests.forEach(test => { test(endpointFunction, db); })
+                    () => functionTests.forEach(
+                        test => { test(endpointFunction, db); }
+                    )
                 );
             }
         }
@@ -26,7 +28,34 @@ async function testEndpoints(db) {
 }
 
 async function testAuthentication(db, um) {
-    
+    const helpers = await require(process.cwd() + "\\server\\helperFunctions.js");
+
+    describe('Authentication:', function () {
+        it("newSession",
+            async function () {
+                let testUsers = [
+                    { userName: "TestUser1", password: "password1" },
+                    { userName: "TestUser2", password: "password2" },
+                    { userName: "TestUser3", password: "password3" },
+                ];
+                testUsers.forEach(async u =>
+                    await helpers.db(
+                        db,
+                        `INSERT INTO User (UserName, Password) VALUES 
+                        ('` + u.userName + `', '` + u.password + `');`
+                    )
+                );
+                const authedUser1 = testUsers[1];
+                const loginToken1 = await um.newSession(authedUser1.userName, authedUser1.password);
+
+                const authedUser2 = testUsers[2];
+                await um.newSession(authedUser2.userName, authedUser2.password);
+
+                let user1AuthRecord = um.authedUsers[loginToken1];
+                assert.equal(authedUser1.userName, user1AuthRecord.userName);
+            }
+        );
+    });
 }
 
 async function main() {

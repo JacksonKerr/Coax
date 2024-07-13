@@ -1,12 +1,12 @@
 const helpers = require("./helperFunctions.js");
 
-const LOGIN_ENDPOINT = "login";
-const SESSION_COOKIE = "session";
 
 module.exports = class requestHandler {
     database = null;
     methods = null;
     userManager = null;
+    publicEndpoints = null;
+    SESSION_COOKIE_NAME = "session";
     ERROR = {
         NO_AUTH: () => "Not authenticated.",
         BAD_CREDENTIALS: () => "Bad username/password combination.",
@@ -17,58 +17,55 @@ module.exports = class requestHandler {
             + "' for parameter '" + param + "' but got '" + given + "'.",
     }
 
-    constructor(endpoints, database, userManager) {
+    constructor(endpoints, database, userManager, publicEndpoints) {
         this.database = database;
         this.endpoints = endpoints;
         this.userManager = userManager;
+        this.publicEndpoints = publicEndpoints;
     }
 
-    async callEndpoint(endpointPath, req, res) {
-        const returnVal = function (response, isAuthFail) {
+    async callEndpoint(endpointPath, request, response) {
+        const returnVal = function (html, isAuthFail) {
             if (isAuthFail)
-                response = helpers.getJsRedirect("login")
-            res.send(response);
-            return response; // For testing
-        }.bind(this);
-        const returnFuncResult = async function (method, userName, params, context) {
-            const response = await method.function(userName, params, context);
-            return returnVal(response);
+                html = helpers.getJsRedirect("login")
+            response.send(html);
+            return html; // For testing
         }.bind(this);
 
-        const method = this.endpoints[req.method][endpointPath];
-        const params = this.getParamsFromRequest(req);
+        const returnFuncResult = async function (userName) {
+            const method = this.endpoints[request.method][endpointPath];
+            const params = this.getParamsFromRequest(request);
+            const paramError = this.checkParams(method, params);
+            if (paramError != null)
+                return returnVal(paramError);
 
-        const paramError = this.checkParams(method, params);
-        if (paramError != null)
-            return returnVal(paramError);
+            const html = await method.function(
+                {...this, authedUserName, params, request, response});
+            return returnVal(html);
+        }.bind(this);
 
-        let sessionToken;
 
-        if (endpointPath == LOGIN_ENDPOINT) {
-            if (req.method == "POST") {
-                sessionToken = await this.userManager.newSession(
-                    params.userName,
-                    params.password
-                );
-                if (!sessionToken) 
-                    return returnVal(this.ERROR.BAD_CREDENTIALS(), true);
-                res.cookie(SESSION_COOKIE, sessionToken)
-                req.headers.cookie = SESSION_COOKIE + '=' + sessionToken;
-            }
-            if (req.method == "GET") {
-                this.userManager.killSessionIfExists(sessionToken);
-                return await returnFuncResult(this.endpoints.GET.login, '', {}, this);
-            }
-        }
 
-        if (sessionToken == null)
-            sessionToken = (req.headers.cookie)?.split('; ')
-                .find(c => c.includes(SESSION_COOKIE))
-                .replace(SESSION_COOKIE + '=', '');
 
-        let userName = this.userManager.getUserFromToken(sessionToken);
-        if (userName != null) 
-            return await returnFuncResult(method, userName, params, this);
+
+
+
+        let sessionToken = (request.headers.cookie)?.split('; ')
+            .find(c => c.includes(this.SESSION_COOKIE_NAME))
+            .replace(this.SESSION_COOKIE_NAME + '=', '');
+        let authedUserName = this.userManager.getUserFromToken(sessionToken);
+        if (authedUserName != null)
+            return await returnFuncResult(authedUserName);
+
+
+
+        let isPublicEndpoint = this.publicEndpoints.find(
+            e => e.method == request.method && e.endpoint == endpointPath
+        ) != null;
+        if (isPublicEndpoint)
+            return await returnFuncResult();
+
+
         return returnVal(this.ERROR.UNKNOWN_SESSION_TOKEN(), true);
     }
 

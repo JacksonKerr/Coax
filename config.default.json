@@ -2,5 +2,23 @@
     "enableAuth": true,
     "numBytesInSessionToken": 128,
     "port": 80,
-    "verbose": false
+    "verbose": false,
+    "publicEndpoints": [
+        {
+            "method": "GET",
+            "endpoint": "login"
+        },
+        {
+            "method": "POST",
+            "endpoint": "login"
+        },
+        {
+            "method": "GET",
+            "endpoint": "newUser"
+        },
+        {
+            "method": "POST",
+            "endpoint": "newUser"
+        }
+    ]
 }

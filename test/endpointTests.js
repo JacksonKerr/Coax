@@ -11,11 +11,11 @@ module.exports = {
 
                 describe('TestName', function () {
 
-                    it('should return -1 when the value is not present',
-                        function () {
-                            assert.equal(1, 2);
-                        }
-                    );
+                    // it('tempref',
+                    //     function () {
+                    //         assert.equal(1, 2);
+                    //     }
+                    // );
                 });
             }
         ],
@@ -25,6 +25,6 @@ module.exports = {
         login: [],
         users: [],
         chat: [],
-        //messages: [],
+        messages: [],
     },
 };
